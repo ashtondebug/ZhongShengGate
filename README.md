@@ -11,6 +11,8 @@
 ![license](https://img.shields.io/badge/license-MIT-green)
 
 > 官方仓库：[GitHub](https://github.com/ashtondebug/ZhongShengGate) ｜ 国内镜像：[GitCode](https://gitcode.com/2302_80290412/ZhongShengGate)（仅供国内访问与部署，**请通过 GitHub 参与贡献**）
+>
+> 在线试玩：<https://zsgate.pages.dev>
 
 ## 项目简介
 
