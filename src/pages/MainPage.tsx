@@ -34,7 +34,8 @@ const FEEDBACK_CHANNELS: FeedbackChannel[] = [
     id: 'github',
     icon: 'fa-brands fa-github',
     name: 'GitHub Issues',
-    desc: '仓库还在孵化中，先让代码再发育两年。',
+    desc: '在众生界发现裂缝或奇想？到 Issues 提交，作者逐条翻牌。',
+    href: 'https://github.com/ashtondebug/ZhongShengGate/issues',
     accent: '#a5b4c8',
   },
   {
