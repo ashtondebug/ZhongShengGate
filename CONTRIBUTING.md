@@ -2,6 +2,8 @@
 
 感谢你对《众生界》（ZhongShengGate）的关注与贡献。本文档面向所有希望参与本项目的开发者，涵盖从报告问题、提交代码到代码合并的完整流程与规范。
 
+> **重要**：本项目以 [GitHub](https://github.com/ashtondebug/ZhongShengGate) 为官方仓库，[GitCode](https://gitcode.com/2302_80290412/ZhongShengGate) 仅作为国内访问镜像与部署源。**所有贡献（Issue / PR）请一律通过 GitHub 提交**，GitCode 镜像不接受任何代码提交。
+
 ---
 
 ## 目录
