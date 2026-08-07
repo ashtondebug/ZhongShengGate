@@ -10,6 +10,8 @@
 ![tests](https://img.shields.io/badge/tests-26%20passed-brightgreen)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
+> 官方仓库：[GitHub](https://github.com/ashtondebug/ZhongShengGate) ｜ 国内镜像：[GitCode](https://gitcode.com/2302_80290412/ZhongShengGate)（仅供国内访问与部署，**请通过 GitHub 参与贡献**）
+
 ## 项目简介
 
 《众生界》是一款运行于浏览器中的东方幻想战略 RPG。玩家作为初入「众生界」的探索者，沿「探索 → 获取资源 → 强化能力 → 解锁区域 → 挑战更强领域」的核心循环成长，逐步揭开世界背后的秘密。
