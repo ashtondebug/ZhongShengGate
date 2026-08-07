@@ -1,0 +1,33 @@
+{
+  "name": "zhongshenggate",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "framer-motion": "^11.18.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.4.1",
+    "tailwindcss": "^4.1.11",
+    "typescript": "~5.8.2",
+    "vite": "^6.3.5",
+    "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}
