@@ -10,6 +10,11 @@ export const PATH_BONUS: Record<PathId, ElementType[]> = {
 }
 
 /**
+ * 等级上限。达到 150 级后不再升级。
+ */
+export const MAX_LEVEL = 150
+
+/**
  * 根据属性推算最大生命。
  */
 export function maxHpFor(constitution: number): number {
@@ -23,11 +28,12 @@ export function expForNextLevel(level: number): number {
   return Math.floor(40 + 40 * level * (1 + level * 0.25))
 }
 
-export function createPlayer(name: string, path: PathId): PlayerState {
+export function createPlayer(name: string, path: PathId, avatar?: string): PlayerState {
   const def = paths.find((p) => p.id === path)!
   const starter: PlayerState = {
     name,
     path,
+    avatar,
     level: 1,
     exp: 0,
     hp: maxHpFor(def.stats.constitution),
@@ -35,7 +41,7 @@ export function createPlayer(name: string, path: PathId): PlayerState {
     spirit: def.stats.capacity,
     maxSpirit: def.stats.capacity,
     stats: { ...def.stats },
-    resources: { ...EMPTY_RESOURCES(), crystals: 10, actionPoints: 5 },
+    resources: { ...EMPTY_RESOURCES(), crystals: 10, actionPoints: 5, coins: 100 },
     skills: def.startingSkills.map((id) => ({ definitionId: id, level: 1, cooldownLeft: 0 })),
     unlockedRegions: ['forest'],
     quests: [],
@@ -48,15 +54,20 @@ export function createPlayer(name: string, path: PathId): PlayerState {
 
 /**
  * 处理经验获取并尝试升级。
+ * 达到等级上限 MAX_LEVEL 后封顶，多余经验丢弃。
  */
 export function grantExp(player: PlayerState, amount: number): PlayerState {
   if (amount <= 0) return player
+  if (player.level >= MAX_LEVEL) return player
   let next = { ...player, exp: player.exp + amount }
   let leveled = false
-  while (next.exp >= expForNextLevel(next.level)) {
+  while (next.exp >= expForNextLevel(next.level) && next.level < MAX_LEVEL) {
     next.exp -= expForNextLevel(next.level)
     next.level += 1
     leveled = true
+  }
+  if (next.level >= MAX_LEVEL) {
+    next.exp = 0
   }
   if (leveled) {
     // 升级基础属性与生命。

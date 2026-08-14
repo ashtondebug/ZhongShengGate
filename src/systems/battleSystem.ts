@@ -94,26 +94,36 @@ export function resolvePlayerAction(
     p.skills = player.skills.map((s) => ({ ...s, cooldownLeft: Math.max(0, s.cooldownLeft - 1) }))
   }
 
-  // 敌人行动阶段判定
+  // 玩家行动结算：敌方被击败则胜利；否则战斗继续进行（敌方由后台定时器自动攻击，见 resolveEnemyTurn）
   if (battle.enemyHp <= 0) {
-    // 战斗胜利，由外部决定奖励
     battle = { ...battle, phase: 'won' }
     log.push({ text: `【${battle.enemyName}】被击败了！`, tone: 'success' })
+  }
+
+  return { battle, playerAfter: p, log }
+}
+
+/**
+ * 敌方回合结算：敌人主动攻击玩家。
+ * 敌人攻击前保留玩家防御减伤，结算后清空防御状态。
+ */
+export function resolveEnemyTurn(
+  state: BattleState,
+  player: PlayerState,
+): { battle: BattleState; playerAfter: PlayerState; log: { text: string; tone: 'info' | 'player' | 'danger' | 'success' }[] } {
+  const log: { text: string; tone: 'info' | 'player' | 'danger' | 'success' }[] = []
+
+  const dmg = enemyAttackDamage(state.enemyAttack, player, state.playerDefending)
+  const p: PlayerState = { ...player, hp: Math.max(0, player.hp - dmg) }
+
+  let battle: BattleState = { ...state, playerDefending: false }
+
+  if (p.hp <= 0) {
+    battle = { ...battle, phase: 'lost' }
+    log.push({ text: '你被灵力打倒在地，意识渐渐远去……', tone: 'danger' })
   } else {
-    const dmg = enemyAttackDamage(battle.enemyAttack, p, battle.playerDefending)
-    p.hp = Math.max(0, p.hp - dmg)
-    if (p.hp <= 0) {
-      battle = { ...battle, phase: 'lost' }
-      log.push({ text: '你被灵力打倒在地，意识渐渐远去……', tone: 'danger' })
-    } else {
-      battle = {
-        ...battle,
-        turn: battle.turn + 1,
-        playerDefending: false,
-        phase: 'player',
-      }
-      log.push({ text: `【${battle.enemyName}】对你发动攻击，造成 ${dmg} 点伤害。`, tone: 'danger' })
-    }
+    battle = { ...battle, phase: 'player', turn: battle.turn + 1 }
+    log.push({ text: `【${battle.enemyName}】对你发动攻击，造成 ${dmg} 点伤害。`, tone: 'danger' })
   }
 
   return { battle, playerAfter: p, log }
@@ -128,8 +138,9 @@ export function snapshotOf(battle: BattleState, player: PlayerState): BattleSnap
   }
 }
 
-export function buildRewards(level: number, dropId?: string) {
+export function buildRewards(level: number, dropId?: string, boss = false) {
   const shards = dropId ? 2 + level : 1 + level
   const crystals = 8 + level * 4
-  return { crystals, shards, cores: dropId === 'cores' ? 1 : 0, exp: 15 + level * 12 }
+  const coins = 10 + level * 4 + (boss ? 50 : 0)
+  return { crystals, shards, cores: dropId === 'cores' ? 1 : 0, exp: 15 + level * 12, coins }
 }

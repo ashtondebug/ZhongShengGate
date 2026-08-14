@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer } from 'react'
-import type { GameState, LogEntry, PathId, PlayerState, QuestState, ScreenId } from '@/types'
-import { regions, enemies, events, skills, quests } from '@/data'
-import { createPlayer, resolvePlayerAction, buildRewards, resolveOption, shouldSpawnBoss } from '@/systems'
+import type { DeathRecord, GameState, LogEntry, PathId, PlayerState, QuestState, ScreenId } from '@/types'
+import { regions, enemies, events, skills, quests, items, equipment } from '@/data'
+import { createPlayer, resolvePlayerAction, resolveEnemyTurn, buildRewards, resolveOption, shouldSpawnBoss } from '@/systems'
 import {
   canAfford,
   payCost,
@@ -15,6 +15,7 @@ import {
 } from '@/systems'
 import { acceptQuest, advanceQuests, claimQuestRewards, questDef } from '@/systems'
 import { addItems, useItem, sellItems } from '@/systems'
+import { buyItem, shopPriceOf } from '@/systems'
 
 const SAVE_KEY = 'zhongshenggate-save-v1'
 
@@ -25,7 +26,7 @@ function entry(text: string, tone: LogEntry['tone']): LogEntry {
 }
 
 type Action =
-  | { type: 'CREATE_PLAYER'; name: string; path: PathId }
+  | { type: 'CREATE_PLAYER'; name: string; path: PathId; avatar?: string }
   | { type: 'NAVIGATE'; screen: ScreenId }
   | { type: 'START_EXPLORATION'; regionId: string; eventId: string }
   | { type: 'ROLL_AGAIN'; eventId: string }
@@ -35,6 +36,7 @@ type Action =
   | { type: 'BASIC_ATTACK' }
   | { type: 'DEFEND' }
   | { type: 'CAST_SKILL'; skillId: string }
+  | { type: 'RESOLVE_ENEMY_TURN' }
   | { type: 'CLAIM_VICTORY' }
   | { type: 'CLAIM_DEFEAT' }
   | { type: 'RETREAT_BATTLE' }
@@ -47,10 +49,48 @@ type Action =
   | { type: 'CLAIM_QUEST'; questId: string }
   | { type: 'USE_ITEM'; itemId: string }
   | { type: 'SELL_ITEM'; itemId: string }
+  | { type: 'BUY_ITEM'; itemId: string }
   | { type: 'TRIGGER_EASTER_EGG' }
+  | { type: 'DISMISS_DEATH' }
+  | { type: 'CREATE_AFTER_DEATH' }
+  | { type: 'SET_AVATAR'; avatar?: string }
 
 function initialState(): GameState {
-  return { screen: 'home', player: null, battle: null, log: [] }
+  return { screen: 'home', player: null, battle: null, log: [], deathRecord: null }
+}
+
+/** 清除本地存档（Node 测试环境下安全降级）。 */
+function clearSave() {
+  try {
+    localStorage.removeItem(SAVE_KEY)
+  } catch {
+    // 忽略
+  }
+}
+
+/** 角色是否已死亡（血条耗尽）。 */
+function isDead(player: PlayerState): boolean {
+  return player.hp <= 0
+}
+
+/**
+ * 角色死亡：永久清除存档与角色数据，记录死亡信息用于弹窗。
+ */
+function applyDeath(state: GameState, player: PlayerState): GameState {
+  clearSave()
+  const record: DeathRecord = {
+    name: player.name,
+    level: player.level,
+    path: player.path,
+    createdAt: player.createdAt,
+    diedAt: Date.now(),
+  }
+  const log = [
+    ...state.log,
+    entry(`探索者「${player.name}」被打倒在地，灵息断绝，就此陨落。`, 'danger'),
+    entry('尘归尘，土归土。等级、任务与遗物尽数消散，宛如从未存在。', 'danger'),
+  ]
+  return { screen: 'home', player: null, battle: null, deathRecord: record, log }
 }
 
 function loadSavedPlayer(): PlayerState | null {
@@ -79,6 +119,7 @@ function migratePlayer(p: PlayerState): PlayerState {
     : []
   return {
     ...p,
+    resources: { ...p.resources, coins: p.resources?.coins ?? 0 },
     quests: questList,
     inventory: Array.isArray(p.inventory) ? p.inventory : [],
   }
@@ -86,22 +127,27 @@ function migratePlayer(p: PlayerState): PlayerState {
 
 function initState(): GameState {
   const saved = loadSavedPlayer()
-  return { ...initialState(), player: saved, screen: saved ? ('main' as ScreenId) : 'home' }
+  return { ...initialState(), player: saved, screen: 'home' }
 }
 
-function reducer(state: GameState, action: Action): GameState {
+export function reducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'CREATE_PLAYER': {
-      const player = createPlayer(action.name.trim() || '无名探索者', action.path)
+      const player = createPlayer(action.name.trim() || '无名探索者', action.path, action.avatar)
       const log = [
         entry(`探索者「${player.name}」踏入众生界。`, 'info'),
         entry('灵能森林已解锁，请从地图开始你的旅程。', 'success'),
       ]
-      return { screen: 'main', player, battle: null, log }
+      return { screen: 'main', player, battle: null, deathRecord: null, log }
     }
 
     case 'NAVIGATE':
       return { ...state, screen: action.screen }
+
+    case 'SET_AVATAR': {
+      if (!state.player) return state
+      return { ...state, player: { ...state.player, avatar: action.avatar } }
+    }
 
     case 'START_EXPLORATION': {
       if (!state.player) return state
@@ -193,6 +239,9 @@ function reducer(state: GameState, action: Action): GameState {
         }
         nextState = { ...nextState, log }
       }
+      if (nextState.player && isDead(nextState.player)) {
+        return applyDeath(nextState, nextState.player)
+      }
       return nextState
     }
 
@@ -205,7 +254,11 @@ function reducer(state: GameState, action: Action): GameState {
       }
 
     case 'BEGIN_BATTLE': {
-      return { ...state, battle: buildBattleState(action.enemyId), screen: 'battle' }
+      return {
+        ...state,
+        battle: buildBattleState(action.enemyId),
+        screen: 'battle',
+      }
     }
 
     case 'BASIC_ATTACK':
@@ -231,12 +284,23 @@ function reducer(state: GameState, action: Action): GameState {
       }
     }
 
+    case 'RESOLVE_ENEMY_TURN': {
+      if (!state.player || !state.battle || state.battle.phase !== 'player') return state
+      const { battle, playerAfter, log } = resolveEnemyTurn(state.battle, state.player)
+      return {
+        ...state,
+        battle,
+        player: playerAfter,
+        log: [...state.log, ...log.map((l) => entry(l.text, l.tone))],
+      }
+    }
+
     case 'CLAIM_VICTORY': {
       const p = state.player
       const battle = state.battle
       if (!p || !battle) return state
       const def = enemies.find((e) => e.id === battle.enemyId)!
-      const rewards = buildRewards(p.level, def.dropId)
+      const rewards = buildRewards(p.level, def.dropId, !!def.boss)
       let player: PlayerState = {
         ...p,
         resources: addRewards(p.resources, rewards),
@@ -262,7 +326,7 @@ function reducer(state: GameState, action: Action): GameState {
       const log = [
         ...state.log,
         entry('战斗胜利！', 'success'),
-        entry(`获得 ${rewards.crystals} 灵晶、${rewards.shards} 灵能碎片。`, 'success'),
+        entry(`获得 ${rewards.crystals} 灵晶、${rewards.shards} 灵能碎片、${rewards.coins} 金币。`, 'success'),
         entry(`获得 ${rewards.exp} 点经验。`, 'success'),
       ]
       if (rewards.cores) log.push(entry('额外获得 1 枚未知核心！', 'success'))
@@ -272,6 +336,9 @@ function reducer(state: GameState, action: Action): GameState {
 
     case 'CLAIM_DEFEAT': {
       if (!state.player) return state
+      if (isDead(state.player)) {
+        return applyDeath(state, state.player)
+      }
       const player: PlayerState = {
         ...state.player,
         hp: 1,
@@ -368,6 +435,20 @@ function reducer(state: GameState, action: Action): GameState {
       return { ...state, player, log }
     }
 
+    case 'BUY_ITEM': {
+      if (!state.player) return state
+      const player = buyItem(state.player, action.itemId)
+      if (!player) return state
+      const item = items.find((i) => i.id === action.itemId)
+      const eq = equipment.find((e) => e.id === action.itemId)
+      const name = item?.name ?? eq?.name ?? action.itemId
+      const log = [
+        ...state.log,
+        entry(`你购得了【${name}】，花费 ${shopPriceOf(action.itemId)} 金币。`, 'success'),
+      ]
+      return { ...state, player, log }
+    }
+
     case 'TRIGGER_EASTER_EGG': {
       const p = state.player
       if (!p || p.easterEggFound) return state
@@ -383,8 +464,14 @@ function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'RESET':
-      localStorage.removeItem(SAVE_KEY)
+      clearSave()
       return initialState()
+
+    case 'DISMISS_DEATH':
+      return { ...state, deathRecord: null }
+
+    case 'CREATE_AFTER_DEATH':
+      return { ...state, screen: 'character-create', deathRecord: null }
 
     default:
       return state
@@ -421,6 +508,7 @@ function formatRewards(r: Record<string, number>): string {
     shards: '灵能碎片',
     cores: '未知核心',
     actionPoints: '探索点',
+    coins: '金币',
   }
   return Object.entries(r)
     .filter(([, v]) => v > 0)
@@ -444,8 +532,10 @@ export function useGameState() {
 
   const actions = useMemo(
     () => ({
-      createPlayer: (name: string, path: PathId) => dispatch({ type: 'CREATE_PLAYER', name, path }),
+      createPlayer: (name: string, path: PathId, avatar?: string) =>
+        dispatch({ type: 'CREATE_PLAYER', name, path, avatar }),
       navigate: (screen: ScreenId) => dispatch({ type: 'NAVIGATE', screen }),
+      setAvatar: (avatar?: string) => dispatch({ type: 'SET_AVATAR', avatar }),
       explore: (regionId: string) => {
         const region = regions.find((r) => r.id === regionId)
         if (!region) return
@@ -474,6 +564,7 @@ export function useGameState() {
       basicAttack: () => dispatch({ type: 'BASIC_ATTACK' }),
       defend: () => dispatch({ type: 'DEFEND' }),
       castSkill: (skillId: string) => dispatch({ type: 'CAST_SKILL', skillId }),
+      resolveEnemyTurn: () => dispatch({ type: 'RESOLVE_ENEMY_TURN' }),
       claimVictory: () => dispatch({ type: 'CLAIM_VICTORY' }),
       claimDefeat: () => dispatch({ type: 'CLAIM_DEFEAT' }),
       retreatBattle: () => dispatch({ type: 'RETREAT_BATTLE' }),
@@ -486,7 +577,10 @@ export function useGameState() {
       claimQuest: (questId: string) => dispatch({ type: 'CLAIM_QUEST', questId }),
       useItem: (itemId: string) => dispatch({ type: 'USE_ITEM', itemId }),
       sellItem: (itemId: string) => dispatch({ type: 'SELL_ITEM', itemId }),
+      buyItem: (itemId: string) => dispatch({ type: 'BUY_ITEM', itemId }),
       triggerEasterEgg: () => dispatch({ type: 'TRIGGER_EASTER_EGG' }),
+      dismissDeath: () => dispatch({ type: 'DISMISS_DEATH' }),
+      createAfterDeath: () => dispatch({ type: 'CREATE_AFTER_DEATH' }),
     }),
     [state.player?.activeRegionId, state.player?.level],
   )

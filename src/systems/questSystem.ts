@@ -68,13 +68,14 @@ export function claimQuestRewards(player: PlayerState, questId: string): PlayerS
     ),
   }
   const r = def.rewards
-  if (r.crystals || r.shards || r.cores) {
+  if (r.crystals || r.shards || r.cores || r.coins) {
     next = {
       ...next,
       resources: addRewards(next.resources, {
         crystals: r.crystals ?? 0,
         shards: r.shards ?? 0,
         cores: r.cores ?? 0,
+        coins: r.coins ?? 0,
       }),
     }
   }

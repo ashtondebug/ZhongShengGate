@@ -4,6 +4,7 @@ import { expForNextLevel } from '@/systems'
 import type { ScreenProps } from '@/App'
 import { Hud } from '@/components/Hud'
 import { PlayerPortrait } from '@/components/PlayerPortrait'
+import { AvatarUploader } from '@/components/AvatarUploader'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { StatBar } from '@/components/ui/StatBar'
 import { GameButton } from '@/components/ui/GameButton'
@@ -41,9 +42,10 @@ export function CharacterPage({ state, actions }: ScreenProps) {
           {/* 左：角色展示 */}
           <GlassCard strong className="flex flex-col items-center text-center">
             <div className="relative mb-5">
-              <PlayerPortrait path={player.path} size="xl" />
+              <PlayerPortrait path={player.path} avatar={player.avatar} size="xl" />
               <span className="pulse-dot absolute -right-1 -bottom-1 h-4 w-4 rounded-full bg-emerald-400" />
             </div>
+            <AvatarUploader current={player.avatar} onChange={actions.setAvatar} />
             <h3 className="font-display text-2xl text-gold-bright">{player.name}</h3>
             <p className="mt-1 text-sm text-cyan-300">{pathDef.name}</p>
             <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black/25 py-2">

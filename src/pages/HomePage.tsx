@@ -2,7 +2,8 @@ import { motion } from 'framer-motion'
 import type { ScreenProps } from '@/App'
 import { GameButton } from '@/components/ui/GameButton'
 
-export function HomePage({ actions }: ScreenProps) {
+export function HomePage({ state, actions }: ScreenProps) {
+  const player = state.player
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
       <motion.div
@@ -46,7 +47,7 @@ export function HomePage({ actions }: ScreenProps) {
           variant="metal"
           className="px-8 py-3.5 text-base sm:px-12 sm:py-4 sm:text-lg"
           icon="fa-solid fa-door-open"
-          onClick={() => actions.navigate('character-create')}
+          onClick={() => actions.navigate(player ? 'main' : 'character-create')}
         >
           进入众生界
         </GameButton>

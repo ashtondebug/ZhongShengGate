@@ -103,6 +103,26 @@ export interface Resources {
   shards: number
   cores: number
   actionPoints: number
+  coins: number
+}
+
+export type EquipmentCategory = 'explore' | 'space' | 'defense' | 'storage' | 'special'
+
+export type Rarity = '普通' | '稀有' | '史诗' | '传说' | '神话' | '剧情'
+
+export interface EquipmentDefinition {
+  id: string
+  name: string
+  category: EquipmentCategory
+  rarity: Rarity
+  icon: string
+  description: string
+  defense?: number
+  damageReduction?: number
+  durability?: number
+  specialEffect?: string
+  price: number
+  purchasable: boolean
 }
 
 export interface ItemDefinition {
@@ -114,6 +134,7 @@ export interface ItemDefinition {
   sellPrice: number
   healHp?: number
   restoreSpirit?: number
+  price?: number
 }
 
 export interface InventoryItem {
@@ -133,6 +154,7 @@ export interface QuestDefinition {
     crystals?: number
     shards?: number
     cores?: number
+    coins?: number
     exp?: number
     items?: { itemId: string; quantity: number }[]
   }
@@ -162,11 +184,13 @@ export type ScreenId =
   | 'character'
   | 'inventory'
   | 'quests'
+  | 'shop'
   | 'social'
 
 export interface PlayerState {
   name: string
   path: PathId
+  avatar?: string
   level: number
   exp: number
   hp: number
@@ -185,6 +209,14 @@ export interface PlayerState {
   lastRestAt: number
 }
 
+export interface DeathRecord {
+  name: string
+  level: number
+  path: PathId
+  createdAt: number
+  diedAt: number
+}
+
 export interface BattleSnapshot {
   playerHp: number
   playerSpirit: number
@@ -198,6 +230,7 @@ export interface GameState {
   battle: BattleState | null
   activeEventId?: string
   activeReport?: ExplorationReport
+  deathRecord?: DeathRecord | null
   log: LogEntry[]
 }
 
@@ -212,7 +245,7 @@ export interface BattleState {
   enemyDefense: number
   turn: number
   playerDefending: boolean
-  phase: 'player' | 'enemy' | 'won' | 'lost'
+  phase: 'player' | 'won' | 'lost'
   rewards?: { crystals: number; shards: number; exp: number; cores?: number }
 }
 

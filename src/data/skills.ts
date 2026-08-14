@@ -99,4 +99,18 @@ export const skills: SkillDefinition[] = [
     learnCost: { shards: 16, cores: 2 },
     upgradeCost: { shards: 6, cores: 1 },
   },
+  {
+    id: 'spirit-space',
+    name: '灵质空间',
+    type: 'space',
+    icon: 'fa-solid fa-box-open',
+    cost: 0,
+    cooldown: 0,
+    description: '传说中唯有达到 150 级才能触碰的至高能力。具体效果待解锁文档补充。',
+    power: 0,
+    maxLevel: 1,
+    levelRequirement: 150,
+    learnCost: { shards: 0 },
+    upgradeCost: { shards: 0 },
+  },
 ]

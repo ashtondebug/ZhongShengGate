@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { createPlayer, grantExp, canLearnSkill, upgradeCostFor, restPlayer, enemyAttackDamage, buildRewards } from '@/systems'
+import { createPlayer, grantExp, canLearnSkill, upgradeCostFor, restPlayer, enemyAttackDamage, buildRewards, MAX_LEVEL } from '@/systems'
+import type { PlayerState } from '@/types'
 import { resolveOption } from '@/systems'
 import { events } from '@/data'
 import { canAfford, payCost, addRewards } from '@/systems'
@@ -67,6 +68,28 @@ describe('characterSystem', () => {
     expect(rested.hp).toBe(rested.maxHp)
     expect(rested.spirit).toBe(rested.maxSpirit)
     expect(rested.resources.actionPoints).toBeGreaterThan(player.resources.actionPoints)
+  })
+
+  it('等级上限为 150，达到后不再升级且经验清零', () => {
+    expect(MAX_LEVEL).toBe(150)
+    const maxed: PlayerState = {
+      ...createPlayer('满级', 'human'),
+      level: MAX_LEVEL,
+      exp: 0,
+    }
+    const after = grantExp(maxed, 10_000)
+    expect(after.level).toBe(MAX_LEVEL)
+    expect(after.exp).toBe(0)
+  })
+
+  it('150 级可学习灵质空间（levelRequirement = 150）', () => {
+    const maxed: PlayerState = {
+      ...createPlayer('满级', 'walker'),
+      level: MAX_LEVEL,
+    }
+    expect(canLearnSkill(maxed, 'spirit-space')).toBe(true)
+    const low = createPlayer('低等级', 'walker')
+    expect(canLearnSkill(low, 'spirit-space')).toBe(false)
   })
 })
 

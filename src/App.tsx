@@ -5,6 +5,8 @@ import { audio, type SoundName } from '@/audio'
 import type { GameState, LogEntry, ScreenId } from '@/types'
 import { ParticleBackground } from '@/components/ui/ParticleBackground'
 import { Footer } from '@/components/ui/Footer'
+import { Modal } from '@/components/ui/Modal'
+import { GameButton } from '@/components/ui/GameButton'
 import { HomePage } from '@/pages/HomePage'
 import { CharacterCreatePage } from '@/pages/CharacterCreatePage'
 import { MainPage } from '@/pages/MainPage'
@@ -15,11 +17,13 @@ import { CharacterPage } from '@/pages/CharacterPage'
 import { AbilitiesPage } from '@/pages/AbilitiesPage'
 import { InventoryPage } from '@/pages/InventoryPage'
 import { QuestsPage } from '@/pages/QuestsPage'
+import { ShopPage } from '@/pages/ShopPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 
 export interface GameActions {
-  createPlayer: (name: string, path: 'human' | 'awakened' | 'walker') => void
+  createPlayer: (name: string, path: 'human' | 'awakened' | 'walker', avatar?: string) => void
   navigate: (screen: ScreenId) => void
+  setAvatar: (avatar?: string) => void
   explore: (regionId: string) => void
   rollAgain: () => void
   resolveOption: (optionId: string) => void
@@ -27,6 +31,7 @@ export interface GameActions {
   basicAttack: () => void
   defend: () => void
   castSkill: (skillId: string) => void
+  resolveEnemyTurn: () => void
   claimVictory: () => void
   claimDefeat: () => void
   retreatBattle: () => void
@@ -39,7 +44,10 @@ export interface GameActions {
   claimQuest: (questId: string) => void
   useItem: (itemId: string) => void
   sellItem: (itemId: string) => void
+  buyItem: (itemId: string) => void
   triggerEasterEgg: () => void
+  dismissDeath: () => void
+  createAfterDeath: () => void
 }
 
 type ScreenProps = {
@@ -130,6 +138,8 @@ export default function App() {
         return <InventoryPage state={state} actions={actions} />
       case 'quests':
         return <QuestsPage state={state} actions={actions} />
+      case 'shop':
+        return <ShopPage state={state} actions={actions} />
       case 'social':
         return <PlaceholderPage state={state} actions={actions} title="社交" icon="fa-solid fa-user-group" description="灵脉感应与道友交流功能正在开发中，多人世界即将开启。" />
       default:
@@ -152,6 +162,27 @@ export default function App() {
           {renderScreen()}
         </motion.div>
       </AnimatePresence>
+      {state.deathRecord && (
+        <Modal open title="角色已死亡" onClose={actions.dismissDeath}>
+          <div className="text-center">
+            <i className="fa-solid fa-skull mb-3 text-5xl text-red-400" />
+            <p className="text-sm leading-relaxed text-white/80 sm:text-base">
+              探索者「<span className="text-gold-bright">{state.deathRecord.name}</span>」灵息已绝，
+              陨落于众生界，一段 Lv.{state.deathRecord.level} 的旅程就此终结。
+              <br />
+              其所记录的一切——修为、任务与遗物——尽数归于虚无，宛如从未存在。
+            </p>
+            <GameButton
+              variant="metal"
+              className="mt-5 px-6 py-3 text-sm sm:text-base"
+              icon="fa-solid fa-feather"
+              onClick={actions.createAfterDeath}
+            >
+              轮回转世 · 创建新角色
+            </GameButton>
+          </div>
+        </Modal>
+      )}
       <Footer />
     </div>
   )

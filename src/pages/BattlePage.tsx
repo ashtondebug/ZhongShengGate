@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { skills } from '@/data'
 import type { ScreenProps } from '@/App'
@@ -11,6 +12,21 @@ import { GameButton } from '@/components/ui/GameButton'
 export function BattlePage({ state, actions }: ScreenProps) {
   const player = state.player
   const battle = state.battle
+
+  // 敌方自动攻击：战斗中每隔 0.3~1 秒（随机）敌方主动攻击一次，直至战斗结束（无需玩家操作）
+  useEffect(() => {
+    if (!battle || battle.phase !== 'player') return
+    let timer: ReturnType<typeof setTimeout>
+    const schedule = () => {
+      timer = setTimeout(() => {
+        actions.resolveEnemyTurn()
+        schedule()
+      }, 300 + Math.random() * 700)
+    }
+    schedule()
+    return () => clearTimeout(timer)
+  }, [battle?.phase])
+
   if (!player || !battle) return null
 
   const skillDefs = player.skills
@@ -53,7 +69,7 @@ export function BattlePage({ state, actions }: ScreenProps) {
               transition={{ duration: 0.4 }}
               className="flex flex-col items-center gap-3"
             >
-              <PlayerPortrait path={player.path} size="lg" />
+              <PlayerPortrait path={player.path} avatar={player.avatar} size="lg" />
               <div className="text-center">
                 <div className="font-display text-lg text-white">{player.name}</div>
                 <div className="text-xs text-cyan-300">Lv.{player.level}</div>
@@ -184,8 +200,8 @@ export function BattlePage({ state, actions }: ScreenProps) {
                     领取战利品
                   </GameButton>
                 ) : (
-                  <GameButton variant="void" icon="fa-solid fa-hospital" onClick={actions.claimDefeat}>
-                    返回城市
+                  <GameButton variant="void" icon="fa-solid fa-feather" onClick={actions.claimDefeat}>
+                    接受命运
                   </GameButton>
                 )}
               </motion.div>

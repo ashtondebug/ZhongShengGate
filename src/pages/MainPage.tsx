@@ -60,6 +60,7 @@ const MENU: { id: ScreenId; icon: string; label: string; sub: string }[] = [
   { id: 'abilities', icon: 'fa-solid fa-wand-magic-sparkles', label: '能力', sub: '修炼灵能之力' },
   { id: 'character', icon: 'fa-solid fa-user', label: '角色', sub: '查看自身状态' },
   { id: 'inventory', icon: 'fa-solid fa-box-open', label: '背包', sub: '资源与物品' },
+  { id: 'shop', icon: 'fa-solid fa-shop', label: '商城', sub: '以金币购宝' },
   { id: 'quests', icon: 'fa-solid fa-scroll', label: '任务', sub: '委托与传说' },
   { id: 'social', icon: 'fa-solid fa-user-group', label: '社交', sub: '灵脉相会' },
 ]
@@ -107,7 +108,7 @@ export function MainPage({ state, actions }: ScreenProps) {
           className="order-2 flex flex-col gap-4 lg:order-1"
         >
           <GlassCard className="flex flex-col items-center text-center">
-            <PlayerPortrait path={player.path} size="xl" className="mb-4" />
+            <PlayerPortrait path={player.path} avatar={player.avatar} size="xl" className="mb-4" />
             <h2 className="font-display text-2xl text-gold-bright">{player.name}</h2>
             <p className="mt-1 text-sm text-cyan-300">{pathDef.name}</p>
             <div className="mt-4 w-full space-y-3">

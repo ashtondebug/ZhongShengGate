@@ -19,7 +19,7 @@ export function Hud({ player, onNavigate }: HudProps) {
   return (
     <header className="glass-frost sticky top-3 z-40 mx-3 flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3 lg:mx-6">
       <div className="flex items-center gap-3">
-        <PlayerPortrait path={player.path} size="sm" />
+        <PlayerPortrait path={player.path} avatar={player.avatar} size="sm" />
         <div className="leading-tight">
           <div className="flex items-center gap-2">
             <span className="font-display text-lg text-gold-bright">{player.name}</span>
@@ -46,6 +46,7 @@ export function Hud({ player, onNavigate }: HudProps) {
       </div>
 
       <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:flex-wrap sm:gap-2 lg:gap-3">
+        <ResourceItem icon="fa-solid fa-coins" value={player.resources.coins} label="金币" tone="gold" />
         <ResourceItem icon="fa-solid fa-gem" value={player.resources.crystals} label="灵晶" tone="gold" />
         <ResourceItem icon="fa-solid fa-cubes" value={player.resources.shards} label="碎片" />
         <ResourceItem icon="fa-solid fa-spinner" value={player.resources.cores} label="核心" tone="void" />

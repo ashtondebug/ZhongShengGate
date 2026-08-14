@@ -1,6 +1,7 @@
 export { EMPTY_RESOURCES, canAfford, payCost, addRewards, applyResources } from './resourceSystem'
 export {
   PATH_BONUS,
+  MAX_LEVEL,
   maxHpFor,
   expForNextLevel,
   createPlayer,
@@ -20,6 +21,7 @@ export {
   skillDamage,
   enemyAttackDamage,
   resolvePlayerAction,
+  resolveEnemyTurn,
   buildRewards,
 } from './battleSystem'
 export { eventsForRegion, rollEvent, resolveOption, shouldSpawnBoss } from './explorationSystem'
@@ -39,3 +41,4 @@ export {
   advanceQuests,
   claimQuestRewards,
 } from './questSystem'
+export { shopItemDef, equipmentDef, shopPriceOf, buyItem } from './shopSystem'

@@ -9,7 +9,7 @@ export const quests: QuestDefinition[] = [
     type: 'hunt',
     target: { kind: 'enemy', id: 'wisp' },
     targetCount: 5,
-    rewards: { crystals: 30, exp: 50 },
+    rewards: { crystals: 30, exp: 50, coins: 60 },
   },
   {
     id: 'hunt-void',
@@ -19,7 +19,7 @@ export const quests: QuestDefinition[] = [
     type: 'hunt',
     target: { kind: 'enemy', id: 'void' },
     targetCount: 3,
-    rewards: { shards: 5, cores: 1, exp: 120 },
+    rewards: { shards: 5, cores: 1, exp: 120, coins: 180 },
     unlockLevel: 6,
   },
   {
@@ -30,7 +30,7 @@ export const quests: QuestDefinition[] = [
     type: 'collect',
     target: { kind: 'resource', id: 'crystals' },
     targetCount: 50,
-    rewards: { shards: 3, exp: 40 },
+    rewards: { shards: 3, exp: 40, coins: 100 },
   },
   {
     id: 'collect-shards',
@@ -40,7 +40,7 @@ export const quests: QuestDefinition[] = [
     type: 'collect',
     target: { kind: 'resource', id: 'shards' },
     targetCount: 15,
-    rewards: { cores: 1, exp: 80 },
+    rewards: { cores: 1, exp: 80, coins: 150 },
     unlockLevel: 5,
   },
   {
@@ -51,7 +51,7 @@ export const quests: QuestDefinition[] = [
     type: 'explore',
     target: { kind: 'region', id: 'forest' },
     targetCount: 3,
-    rewards: { crystals: 20, exp: 30 },
+    rewards: { crystals: 20, exp: 30, coins: 50 },
   },
   {
     id: 'explore-ruins',
@@ -61,7 +61,7 @@ export const quests: QuestDefinition[] = [
     type: 'explore',
     target: { kind: 'region', id: 'ruins' },
     targetCount: 3,
-    rewards: { shards: 4, exp: 70 },
+    rewards: { shards: 4, exp: 70, coins: 90 },
     unlockLevel: 4,
   },
 ]

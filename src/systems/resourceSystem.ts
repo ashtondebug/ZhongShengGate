@@ -1,6 +1,12 @@
 import type { Resources } from '@/types'
 
-export const EMPTY_RESOURCES = (): Resources => ({ crystals: 0, shards: 0, cores: 0, actionPoints: 0 })
+export const EMPTY_RESOURCES = (): Resources => ({
+  crystals: 0,
+  shards: 0,
+  cores: 0,
+  actionPoints: 0,
+  coins: 0,
+})
 
 export function canAfford(held: Resources, cost: Partial<Resources>): boolean {
   return (Object.keys(cost) as (keyof Resources)[]).every(

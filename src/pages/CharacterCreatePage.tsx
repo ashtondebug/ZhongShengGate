@@ -5,6 +5,7 @@ import { paths } from '@/data'
 import type { ScreenProps } from '@/App'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GameButton } from '@/components/ui/GameButton'
+import { AvatarUploader } from '@/components/AvatarUploader'
 
 const STAT_LABELS: { key: keyof (typeof paths)[0]['stats']; label: string }[] = [
   { key: 'spirit', label: '灵能' },
@@ -18,6 +19,7 @@ const STAT_LABELS: { key: keyof (typeof paths)[0]['stats']; label: string }[] = 
 export function CharacterCreatePage({ actions }: ScreenProps) {
   const [name, setName] = useState('')
   const [selected, setSelected] = useState<PathId>('human')
+  const [avatar, setAvatar] = useState<string | undefined>(undefined)
 
   return (
     <div className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-4 py-10">
@@ -44,6 +46,10 @@ export function CharacterCreatePage({ actions }: ScreenProps) {
           placeholder="输入探索者之名……"
           className="glass w-full rounded-xl px-4 py-3 text-center font-display text-lg text-gold-bright placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-cyan-300/60"
         />
+      </div>
+
+      <div className="mb-8">
+        <AvatarUploader current={avatar} onChange={setAvatar} label="上传自定义头像（可选）" />
       </div>
 
       <div className="grid w-full gap-4 md:grid-cols-3">
@@ -98,7 +104,7 @@ export function CharacterCreatePage({ actions }: ScreenProps) {
         <GameButton
           variant="metal"
           icon="fa-solid fa-key"
-          onClick={() => actions.createPlayer(name, selected)}
+          onClick={() => actions.createPlayer(name, selected, avatar)}
         >
           踏入众生界
         </GameButton>
